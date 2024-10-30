@@ -47,7 +47,7 @@
 
         <!-- Sign In 버튼 -->
         <Button
-            android:id="@+id/Login_Signin"
+            android:id="@+id/button_login_signin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -58,7 +58,7 @@
 
 
         <Button
-            android:id="@+id/Login_ForgotPassword"
+            android:id="@+id/button_login_forgotpwd"
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="28dp"

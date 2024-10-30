@@ -5,11 +5,6 @@ import android.os.Bundle;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.*;
-import android.content.Intent;
-import android.view.View;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class LoginActivity extends AppCompatActivity {
     @Override
@@ -20,7 +15,7 @@ public class LoginActivity extends AppCompatActivity {
 
         EditText Email = findViewById(R.id.Login_InsertEmail);
         EditText Password = findViewById(R.id.Login_InsertPassword);
-        Button SigninButton = findViewById(R.id.Login_Signin);
-        Button ForgotPasswordButton = findViewById(R.id.Login_ForgotPassword);
+        Button SigninButton = findViewById(R.id.button_login_signin);
+        Button ForgotPasswordButton = findViewById(R.id.button_login_forgotpwd);
     }
 }

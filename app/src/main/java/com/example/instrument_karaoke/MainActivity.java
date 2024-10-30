@@ -14,9 +14,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_initial);
 
-        Button login_button = (Button) findViewById(R.id.Main_Login);
+        Button login_button = (Button) findViewById(R.id.button_initial_login);
         login_button.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button signin_button = findViewById(R.id.Main_Register);
+        Button signin_button = findViewById(R.id.button_initial_register);
         TextView Maintextview = findViewById(R.id.Main_Title);
     }
 }
