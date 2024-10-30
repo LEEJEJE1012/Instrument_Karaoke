@@ -13,18 +13,21 @@
         android:theme="@style/Theme.Instrument_Karaoke"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".SheetmanageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".InitialActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="true"
-            android:screenOrientation="landscape"
-            android:configChanges="orientation|screenSize">
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".LoginActivity"/>
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".MainActivity" />
 
         <meta-data
             android:name="preloaded_fonts"
