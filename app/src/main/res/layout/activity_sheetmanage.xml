@@ -20,13 +20,13 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ListView
-            android:id="@+id/lv_uploaded_sheets"
+            android:id="@+id/listview_sheetmanage_sheetlist"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            app:layout_constraintBottom_toTopOf="@+id/button"
+            app:layout_constraintBottom_toTopOf="@+id/button_sheetmanage_makesheet"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_default="spread"
             app:layout_constraintStart_toStartOf="parent"
@@ -34,13 +34,13 @@
             app:layout_constraintWidth_default="spread" />
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/button_sheetmanage_makesheet"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
-            android:minWidth="88dip"
-            android:text="악보 선택"
             android:backgroundTint="@color/black"
+            android:minWidth="88dip"
+            android:text="악보 생성"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
@@ -56,7 +56,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/button_sheetmanage_sidebar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"

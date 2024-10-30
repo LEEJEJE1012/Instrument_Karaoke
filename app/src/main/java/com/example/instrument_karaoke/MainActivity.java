@@ -16,6 +16,15 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        ImageButton uploadscore_button = (ImageButton) findViewById(R.id.button_main_uploadscore);
+        uploadscore_button.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), SheetmanageActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 }
 
