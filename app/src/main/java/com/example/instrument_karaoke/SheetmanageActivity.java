@@ -15,8 +15,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.widget.ListView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,32 +45,52 @@ public class SheetmanageActivity extends AppCompatActivity {
         });
 
         // ListView 설정
-        ListView listView = findViewById(R.id.listview_sheetmanage_sheetlist);
+        ListView listView = (ListView)findViewById(R.id.listview_sheetmanage_sheetlist);
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, itemList);
         listView.setAdapter(adapter);
 
         // 버튼 설정
-        ImageButton addButton = findViewById(R.id.button_sheetmanage_makesheet); // activity_sheetmanage.xml에 버튼 추가 필요
+        Button addButton = (Button)findViewById(R.id.button_sheetmanage_makesheet); // activity_sheetmanage.xml에 버튼 추가 필요
         addButton.setOnClickListener(view -> showNameInputDialog());
     }
 
-    // 항목 이름을 입력하는 다이얼로그 표시
     private void showNameInputDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("항목 이름 입력");
+        builder.setTitle("곡 정보 입력");
 
-        final EditText input = new EditText(this);
-        builder.setView(input);
+        // 레이아웃을 생성하여 두 개의 EditText 추가
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 10);
 
+        // 곡 제목 입력 필드
+        final EditText titleInput = new EditText(this);
+        titleInput.setHint("곡 제목");
+        layout.addView(titleInput);
+
+        // 아티스트 이름 입력 필드
+        final EditText artistInput = new EditText(this);
+        artistInput.setHint("아티스트 이름");
+        layout.addView(artistInput);
+
+        builder.setView(layout);
+
+        // "확인" 버튼 설정
         builder.setPositiveButton("확인", (dialog, which) -> {
-            currentItemName = input.getText().toString();
-            if (!currentItemName.isEmpty()) {
+            String songTitle = titleInput.getText().toString().trim();
+            String artistName = artistInput.getText().toString().trim();
+
+            if (!songTitle.isEmpty() && !artistName.isEmpty()) {
+                // 제목과 아티스트 이름을 모두 입력한 경우에만 갤러리 열기
+                currentItemName = songTitle + " - " + artistName; // 예: "곡 제목 - 아티스트"
                 openGallery();
             } else {
-                Toast.makeText(this, "이름을 입력하세요", Toast.LENGTH_SHORT).show();
+                // 제목 또는 아티스트 이름을 입력하지 않으면 경고 메시지 표시
+                Toast.makeText(this, "제목과 아티스트 이름을 모두 입력하세요", Toast.LENGTH_SHORT).show();
             }
         });
 
+        // "취소" 버튼 설정
         builder.setNegativeButton("취소", (dialog, which) -> dialog.cancel());
         builder.show();
     }
