@@ -64,19 +64,16 @@ public class SheetmanageActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sheetmanage);
 
-        // 시스템 바 여백 추가
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // ListView 설정
         ListView listView = (ListView)findViewById(R.id.listview_sheetmanage_sheetlist);
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, itemList);
         listView.setAdapter(adapter);
 
-        // ListView 항목 클릭 리스너 설정
         listView.setOnItemClickListener((parent, view, position, id) -> {
             Item selectedItem = itemList.get(position);
             showItemDialog(selectedItem); // 클릭된 항목을 팝업으로 표시
