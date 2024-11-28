@@ -289,16 +289,21 @@ public class SheetUploadActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    byte[] musicXMLBytes = response.body().bytes();
-                    File mxlFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "test.mxl");
+                    // 서버에서 반환된 WAV 파일 데이터 읽기
+                    byte[] wavBytes = response.body().bytes();
+
+                    // WAV 파일 저장 위치 설정
+                    File wavFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "output.wav");
 
                     // 파일 저장
-                    try (FileOutputStream fos = new FileOutputStream(mxlFile)) {
-                        fos.write(musicXMLBytes);
+                    try (FileOutputStream fos = new FileOutputStream(wavFile)) {
+                        fos.write(wavBytes);
                     }
 
-                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "MusicXML saved: " + mxlFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
+                    // UI 업데이트: 사용자에게 저장 경로 알림
+                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "WAV saved: " + wavFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
                 } else {
+                    // 서버에서 응답 실패
                     runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
                 }
             }
