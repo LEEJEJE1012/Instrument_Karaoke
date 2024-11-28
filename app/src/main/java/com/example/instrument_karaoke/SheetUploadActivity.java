@@ -2,34 +2,28 @@ package com.example.instrument_karaoke;
 
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.ListView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,7 +42,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class SheetmanageActivity extends AppCompatActivity {
+public class SheetUploadActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_READ_MEDIA_IMAGES = 1;
     private static final int PICK_IMAGES = 1;
     private List<Item> itemList = new ArrayList<>();
@@ -63,15 +57,15 @@ public class SheetmanageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_sheetmanage);
+        setContentView(R.layout.activity_sheetupload);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.listview_sheetmanage_sheetlist), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        ListView listView = (ListView)findViewById(R.id.listview_sheetmanage_sheetlist);
+        ListView listView = (ListView)findViewById(R.id.listview_sheetupload_sheetlist);
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, itemList);
         listView.setAdapter(adapter);
 
@@ -82,7 +76,7 @@ public class SheetmanageActivity extends AppCompatActivity {
 
 
         // 버튼 설정
-        Button addButton = (Button)findViewById(R.id.button_sheetmanage_makesheet); // activity_sheetmanage.xml에 버튼 추가 필요
+        Button addButton = (Button)findViewById(R.id.button_sheetupload_makesheet); // activity_sheetmanage.xml에 버튼 추가 필요
         addButton.setOnClickListener(view -> showNameInputDialog());
     }
 
@@ -103,7 +97,6 @@ public class SheetmanageActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("곡 정보 입력");
 
-        // 레이아웃을 생성하여 두 개의 EditText 추가
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 40, 50, 10);
@@ -118,16 +111,26 @@ public class SheetmanageActivity extends AppCompatActivity {
         artistInput.setHint("아티스트 이름");
         layout.addView(artistInput);
 
+        // 악기 선택 Spinner 추가
+        final Spinner instrumentSpinner = new Spinner(this);
+        String[] instruments = {"일렉기타", "어쿠스틱 기타", "피아노", "베이스 기타", "드럼"};
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_item, instruments);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        instrumentSpinner.setAdapter(spinnerAdapter);
+        layout.addView(instrumentSpinner);
+
         builder.setView(layout);
 
         // "확인" 버튼 설정
         builder.setPositiveButton("확인", (dialog, which) -> {
             String songTitle = titleInput.getText().toString().trim();
             String artistName = artistInput.getText().toString().trim();
+            String selectedInstrument = instrumentSpinner.getSelectedItem().toString();
 
             if (!songTitle.isEmpty() && !artistName.isEmpty()) {
                 // 제목과 아티스트 이름을 모두 입력한 경우에만 갤러리 열기
-                currentItemName = songTitle + " - " + artistName; // 예: "곡 제목 - 아티스트"
+                currentItemName = songTitle + " - " + artistName + " - " + selectedInstrument; // 예: "곡 제목 - 아티스트"
                 openGallery();
             } else {
                 // 제목 또는 아티스트 이름을 입력하지 않으면 경고 메시지 표시
@@ -280,7 +283,7 @@ public class SheetmanageActivity extends AppCompatActivity {
                 Log.e("UploadError", "Failed to upload images: " + e.getMessage());
 
                 // Toast에서는 짧은 메시지만 출력
-                runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "Failed to upload images. Check Logcat for details.", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to upload images. Check Logcat for details.", Toast.LENGTH_SHORT).show());
             }
 
             @Override
@@ -294,9 +297,9 @@ public class SheetmanageActivity extends AppCompatActivity {
                         fos.write(musicXMLBytes);
                     }
 
-                    runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "MusicXML saved: " + mxlFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "MusicXML saved: " + mxlFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
                 } else {
-                    runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
                 }
             }
         });

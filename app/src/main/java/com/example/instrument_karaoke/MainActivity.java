@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         uploadscore_button.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), SheetmanageActivity.class);
+                Intent intent = new Intent(getApplicationContext(), SheetUploadActivity.class);
                 startActivity(intent);
             }
         });
