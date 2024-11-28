@@ -25,6 +25,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ImageButton myscore_button = (ImageButton) findViewById(R.id.button_main_myscore);
+        myscore_button.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), SheetManageActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 }
 

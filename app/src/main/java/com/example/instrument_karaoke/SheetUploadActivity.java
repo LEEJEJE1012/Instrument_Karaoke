@@ -48,6 +48,7 @@ public class SheetUploadActivity extends AppCompatActivity {
     private List<Item> itemList = new ArrayList<>();
     private ArrayAdapter<Item> adapter;
     private String currentItemName = null;
+    private String currentInstrument = null;
     private ImageView imageView;
     private Uri imageUri;
     private List<Uri> imageUriList = new ArrayList<>();
@@ -130,7 +131,8 @@ public class SheetUploadActivity extends AppCompatActivity {
 
             if (!songTitle.isEmpty() && !artistName.isEmpty()) {
                 // 제목과 아티스트 이름을 모두 입력한 경우에만 갤러리 열기
-                currentItemName = songTitle + " - " + artistName + " - " + selectedInstrument; // 예: "곡 제목 - 아티스트"
+                currentItemName = songTitle + " - " + artistName; // 예: "곡 제목 - 아티스트"
+                currentInstrument = selectedInstrument;
                 openGallery();
             } else {
                 // 제목 또는 아티스트 이름을 입력하지 않으면 경고 메시지 표시
@@ -199,14 +201,14 @@ public class SheetUploadActivity extends AppCompatActivity {
                 } else if (data.getData() != null) { // 단일 이미지 선택
                     imageUris.add(data.getData());
                 }
-                addItemToList(currentItemName, imageUris);
+                addItemToList(currentItemName, currentInstrument, imageUris);
             }
         }
     }
 
     // ListView에 항목 추가
-    private void addItemToList(String name, List<Uri> imageUris) {
-        Item newItem = new Item(name, imageUris);
+    private void addItemToList(String name, String instrument, List<Uri> imageUris) {
+        Item newItem = new Item(name, instrument, imageUris);
         itemList.add(newItem);
         adapter.notifyDataSetChanged();
     }
@@ -229,7 +231,7 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         builder.setNeutralButton("업로드", (dialog, which) -> {
             try {
-                uploadImagesToServer(item.getImages()); // 업로드 메서드 호출
+                uploadImagesToServer(item.getImages(), item); // 업로드 메서드 호출
             } catch (IOException e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Failed to upload images", Toast.LENGTH_SHORT).show();
@@ -240,7 +242,7 @@ public class SheetUploadActivity extends AppCompatActivity {
         builder.show();
     }
     // 이미지를 Flask 서버로 업로드하는 메서드
-    private void uploadImagesToServer(List<Uri> imageUriList) throws IOException {
+    private void uploadImagesToServer(List<Uri> imageUriList, Item item) throws IOException {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS) // 연결 타임아웃
                 .readTimeout(60, TimeUnit.SECONDS)    // 읽기 타임아웃 (서버 응답 대기 시간)
@@ -292,9 +294,16 @@ public class SheetUploadActivity extends AppCompatActivity {
                     // 서버에서 반환된 WAV 파일 데이터 읽기
                     byte[] wavBytes = response.body().bytes();
 
-                    // WAV 파일 저장 위치 설정
-                    File wavFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "output.wav");
+                    String safeFileName = item.getName().replaceAll("[^a-zA-Z0-9._-]", "_") + ".wav";
 
+                    // 앱 전용 디렉터리 내에 저장
+                    File appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles"); // "AudioFiles" 폴더 생성
+                    if (!appSpecificDir.exists()) {
+                        appSpecificDir.mkdirs(); // 폴더가 없으면 생성
+                    }
+
+                    // WAV 파일 저장 위치 설정
+                    File wavFile = new File(appSpecificDir, safeFileName);
                     // 파일 저장
                     try (FileOutputStream fos = new FileOutputStream(wavFile)) {
                         fos.write(wavBytes);
@@ -325,10 +334,12 @@ public class SheetUploadActivity extends AppCompatActivity {
     // Item 클래스 정의
     public static class Item {
         private String name;
+        private String instrument;
         private final List<Uri> images;
 
-        public Item(String name, List<Uri> images) {
+        public Item(String name, String instrument, List<Uri> images) {
             this.name = name;
+            this.instrument = instrument;
             this.images = images;
         }
 
@@ -339,6 +350,10 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         public String getName() {
             return name;
+        }
+
+        public String getInstrument(){
+            return instrument;
         }
 
         public void setName(String name) { // 이름을 설정하는 메서드 추가
