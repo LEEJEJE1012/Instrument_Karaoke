@@ -36,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 import okhttp3.Call;
@@ -235,31 +236,38 @@ public class SheetmanageActivity extends AppCompatActivity {
 
         builder.show();
     }
-
     // 이미지를 Flask 서버로 업로드하는 메서드
     private void uploadImagesToServer(List<Uri> imageUriList) throws IOException {
-        OkHttpClient client = new OkHttpClient();
-
-        Uri imageUri = imageUriList.get(0);
-
-        String filePath = getRealPathFromURI(imageUri);
-        if (filePath == null) {
-            Log.e("UploadError", "File path is null");
-            Toast.makeText(this, "파일 경로가 유효하지 않습니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        File file = new File(filePath);
-
-        // multipart/form-data로 파일 전송
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(),
-                        RequestBody.create(MediaType.parse("image/png"), file))
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS) // 연결 타임아웃
+                .readTimeout(60, TimeUnit.SECONDS)    // 읽기 타임아웃 (서버 응답 대기 시간)
+                .writeTimeout(60, TimeUnit.SECONDS)   // 쓰기 타임아웃 (데이터 업로드 시간)
                 .build();
+
+        // multipart/form-data로 여러 파일 전송
+        MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM);
+
+        // 이미지 URI 리스트 순회
+        for (Uri imageUri : imageUriList) {
+            String filePath = getRealPathFromURI(imageUri);
+            if (filePath == null) {
+                Log.e("UploadError", "File path is null for image: " + imageUri.toString());
+                Toast.makeText(this, "파일 경로가 유효하지 않습니다.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            File file = new File(filePath);
+
+            // 각 파일을 MultipartBody에 추가
+            requestBodyBuilder.addFormDataPart("files[]", file.getName(),
+                    RequestBody.create(MediaType.parse("image/png"), file));
+        }
+
+        RequestBody requestBody = requestBodyBuilder.build();
 
         // 서버의 URL 설정 (Flask 서버)
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:5000/upload")  // Flask 서버 URL
+                .url("http://172.20.10.3:5001/upload") // Flask 서버 URL
                 .post(requestBody)
                 .build();
 
@@ -269,10 +277,10 @@ public class SheetmanageActivity extends AppCompatActivity {
                 e.printStackTrace();  // 콘솔에 전체 스택 트레이스 출력
 
                 // 긴 메시지는 Logcat에 출력
-                Log.e("UploadError", "Failed to upload image: " + e.getMessage());
+                Log.e("UploadError", "Failed to upload images: " + e.getMessage());
 
                 // Toast에서는 짧은 메시지만 출력
-                runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "Failed to upload image. Check Logcat for details.", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "Failed to upload images. Check Logcat for details.", Toast.LENGTH_SHORT).show());
             }
 
             @Override
@@ -288,11 +296,12 @@ public class SheetmanageActivity extends AppCompatActivity {
 
                     runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "MusicXML saved: " + mxlFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
                 } else {
-                    runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "Failed to process image", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> Toast.makeText(SheetmanageActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
                 }
             }
         });
     }
+
 
     private String getRealPathFromURI(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};
