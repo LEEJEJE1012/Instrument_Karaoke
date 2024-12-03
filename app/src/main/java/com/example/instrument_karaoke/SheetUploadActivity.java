@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.InputType;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -49,6 +50,7 @@ public class SheetUploadActivity extends AppCompatActivity {
     private ArrayAdapter<Item> adapter;
     private String currentItemName = null;
     private String currentInstrument = null;
+    private int currentTempo; // 템포 값 저장
     private ImageView imageView;
     private Uri imageUri;
     private List<Uri> imageUriList = new ArrayList<>();
@@ -121,6 +123,12 @@ public class SheetUploadActivity extends AppCompatActivity {
         instrumentSpinner.setAdapter(spinnerAdapter);
         layout.addView(instrumentSpinner);
 
+        // 템포 입력 필드
+        final EditText tempoInput = new EditText(this);
+        tempoInput.setHint("템포 (40-300)");
+        tempoInput.setInputType(InputType.TYPE_CLASS_NUMBER); // 숫자 입력 전용
+        layout.addView(tempoInput);
+
         builder.setView(layout);
 
         // "확인" 버튼 설정
@@ -128,15 +136,22 @@ public class SheetUploadActivity extends AppCompatActivity {
             String songTitle = titleInput.getText().toString().trim();
             String artistName = artistInput.getText().toString().trim();
             String selectedInstrument = instrumentSpinner.getSelectedItem().toString();
+            String tempoStr = tempoInput.getText().toString().trim();
 
-            if (!songTitle.isEmpty() && !artistName.isEmpty()) {
-                // 제목과 아티스트 이름을 모두 입력한 경우에만 갤러리 열기
-                currentItemName = songTitle + " - " + artistName; // 예: "곡 제목 - 아티스트"
-                currentInstrument = selectedInstrument;
-                openGallery();
+            if (!songTitle.isEmpty() && !artistName.isEmpty() && !tempoStr.isEmpty()) {
+                int tempo = Integer.parseInt(tempoStr);
+                if (tempo < 5 || tempo > 300) {
+                    // 템포가 유효하지 않으면 경고 메시지 표시
+                    Toast.makeText(this, "템포는 5에서 300 사이의 값이어야 합니다", Toast.LENGTH_SHORT).show();
+                } else {
+                    currentItemName = songTitle + " - " + artistName; // 예: "곡 제목 - 아티스트"
+                    currentInstrument = selectedInstrument;
+                    currentTempo = tempo; // 템포 저장
+                    openGallery();
+                }
             } else {
-                // 제목 또는 아티스트 이름을 입력하지 않으면 경고 메시지 표시
-                Toast.makeText(this, "제목과 아티스트 이름을 모두 입력하세요", Toast.LENGTH_SHORT).show();
+                // 입력값 누락 시 경고 메시지 표시
+                Toast.makeText(this, "제목, 아티스트 이름, 템포를 모두 입력하세요", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -154,21 +169,56 @@ public class SheetUploadActivity extends AppCompatActivity {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 40, 50, 10);
 
-        // 이름 입력 필드
+        // 곡 제목 입력 필드
         final EditText nameInput = new EditText(this);
         nameInput.setText(item.getName());
+        nameInput.setHint("곡 제목");
         layout.addView(nameInput);
+
+        // 아티스트 이름 입력 필드
+        final EditText artistInput = new EditText(this);
+        artistInput.setText(item.getInstrument()); // Instrument 필드가 현재 아티스트 이름을 저장한다고 가정
+        artistInput.setHint("아티스트 이름");
+        layout.addView(artistInput);
+
+        // 악기 선택 Spinner 추가
+        final Spinner instrumentSpinner = new Spinner(this);
+        String[] instruments = {"일렉기타", "어쿠스틱 기타", "피아노", "베이스 기타", "드럼"};
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_item, instruments);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        instrumentSpinner.setAdapter(spinnerAdapter);
+        instrumentSpinner.setSelection(spinnerAdapter.getPosition(item.getInstrument())); // 기존 선택 값으로 설정
+        layout.addView(instrumentSpinner);
+
+        // 템포 입력 필드
+        final EditText tempoInput = new EditText(this);
+        tempoInput.setText(String.valueOf(item.getTempo()));
+        tempoInput.setHint("템포 (5-300)");
+        tempoInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        layout.addView(tempoInput);
 
         builder.setView(layout);
 
         // "저장" 버튼 설정
         builder.setPositiveButton("저장", (dialog, which) -> {
             String newName = nameInput.getText().toString().trim();
-            if (!newName.isEmpty()) {
-                item.setName(newName); // 새로운 이름 설정
-                adapter.notifyDataSetChanged(); // ListView 갱신
+            String newArtist = artistInput.getText().toString().trim();
+            String newInstrument = instrumentSpinner.getSelectedItem().toString();
+            String tempoStr = tempoInput.getText().toString().trim();
+
+            if (!newName.isEmpty() && !newArtist.isEmpty() && !tempoStr.isEmpty()) {
+                int newTempo = Integer.parseInt(tempoStr);
+                if (newTempo < 5 || newTempo > 300) {
+                    Toast.makeText(this, "템포는 5에서 300 사이의 값이어야 합니다", Toast.LENGTH_SHORT).show();
+                } else {
+                    item.setName(newName);
+                    item.setInstrument(newInstrument);
+                    item.setTempo(newTempo); // 템포 값 설정
+                    adapter.notifyDataSetChanged(); // ListView 갱신
+                }
             } else {
-                Toast.makeText(this, "이름을 입력하세요", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "모든 필드를 올바르게 입력하세요", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -208,7 +258,7 @@ public class SheetUploadActivity extends AppCompatActivity {
 
     // ListView에 항목 추가
     private void addItemToList(String name, String instrument, List<Uri> imageUris) {
-        Item newItem = new Item(name, instrument, imageUris);
+        Item newItem = new Item(name, instrument, currentTempo, imageUris);
         itemList.add(newItem);
         adapter.notifyDataSetChanged();
     }
@@ -216,19 +266,26 @@ public class SheetUploadActivity extends AppCompatActivity {
     // 선택된 항목을 팝업으로 표시하는 메서드
     private void showItemDialog(Item item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(item.getName());
+        builder.setTitle("곡 정보");
+
+        // 곡 정보를 보기 쉽게 메시지로 구성
+        String message = "곡 제목: " + item.getName() + "\n" +
+                "아티스트: " + item.getInstrument() + "\n" +  // 아티스트 정보가 저장된 필드라고 가정
+                "악기: " + item.getInstrument() + "\n" +
+                "템포: " + item.getTempo() + " BPM";
 
         // 팝업 메시지 설정
-        builder.setMessage("선택한 곡 정보입니다.");
+        builder.setMessage(message);
 
         // "수정" 버튼 설정
         builder.setPositiveButton("수정", (dialog, which) -> {
-            showEditDialog(item); // 예시로 수정 다이얼로그를 띄우는 메서드 호출
+            showEditDialog(item); // 수정 다이얼로그 호출
         });
 
         // "닫기" 버튼 설정
         builder.setNegativeButton("닫기", (dialog, which) -> dialog.dismiss());
 
+        // "업로드" 버튼 설정
         builder.setNeutralButton("업로드", (dialog, which) -> {
             try {
                 uploadImagesToServer(item.getImages(), item); // 업로드 메서드 호출
@@ -238,9 +295,9 @@ public class SheetUploadActivity extends AppCompatActivity {
             }
         });
 
-
         builder.show();
     }
+
     // 이미지를 Flask 서버로 업로드하는 메서드
     private void uploadImagesToServer(List<Uri> imageUriList, Item item) throws IOException {
         OkHttpClient client = new OkHttpClient.Builder()
@@ -335,12 +392,14 @@ public class SheetUploadActivity extends AppCompatActivity {
     public static class Item {
         private String name;
         private String instrument;
+        private int tempo;
         private final List<Uri> images;
 
-        public Item(String name, String instrument, List<Uri> images) {
+        public Item(String name, String instrument, int tempo, List<Uri> images) {
             this.name = name;
             this.instrument = instrument;
             this.images = images;
+            this.tempo = tempo;
         }
 
         @Override
@@ -352,6 +411,11 @@ public class SheetUploadActivity extends AppCompatActivity {
             return name;
         }
 
+        public int getTempo() {
+            return tempo;
+        }
+
+
         public String getInstrument(){
             return instrument;
         }
@@ -359,6 +423,15 @@ public class SheetUploadActivity extends AppCompatActivity {
         public void setName(String name) { // 이름을 설정하는 메서드 추가
             this.name = name;
         }
+
+        public void setTempo(int tempo) {
+            this.tempo = tempo;
+        }
+
+        public void setInstrument(String instrument) {
+            this.instrument = instrument;
+        }
+
 
         public List<Uri> getImages() {
             return images;
