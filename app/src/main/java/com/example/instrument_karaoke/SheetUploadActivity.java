@@ -310,6 +310,10 @@ public class SheetUploadActivity extends AppCompatActivity {
         MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM);
 
+        requestBodyBuilder.addFormDataPart("tempo", String.valueOf(item.getTempo()));
+        int instrumentCode = mapInstrumentToCode(item.getInstrument());
+        requestBodyBuilder.addFormDataPart("instrument", String.valueOf(instrumentCode));
+
         // 이미지 URI 리스트 순회
         for (Uri imageUri : imageUriList) {
             String filePath = getRealPathFromURI(imageUri);
@@ -386,6 +390,23 @@ public class SheetUploadActivity extends AppCompatActivity {
             }
         }
         return null;
+    }
+
+    private int mapInstrumentToCode(String instrument) {
+        switch (instrument) {
+            case "일렉기타":
+                return 1;
+            case "어쿠스틱 기타":
+                return 2;
+            case "피아노":
+                return 3;
+            case "베이스 기타":
+                return 4;
+            case "드럼":
+                return 5;
+            default:
+                return 0; // 기본값, 매핑되지 않은 악기
+        }
     }
 
     // Item 클래스 정의
