@@ -6,9 +6,10 @@
     android:layout_height="match_parent"
     android:background="@drawable/background_blurred">
 
+    <!-- Title TextView -->
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/adlam_display"
         android:gravity="center"
@@ -18,74 +19,70 @@
         android:textSize="36sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/constraintLayout"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
-        android:layout_width="50dp"
-        android:layout_height="0dp"
-        android:background="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_bias="0.5" />
 
-        <ImageButton
-            android:id="@+id/button_menu_sidebar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="371dp"
-            android:background="@android:color/transparent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/baseline_menu_24" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
+    <!-- Upload Score Button -->
     <ImageButton
         android:id="@+id/button_main_uploadscore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:layout_margin="16dp"
         android:background="@android:color/transparent"
-        app:layout_constraintBottom_toTopOf="@+id/button_main_myscore"
-        app:layout_constraintEnd_toStartOf="@+id/button_main_play"
-        app:layout_constraintStart_toEndOf="@+id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintEnd_toStartOf="@id/button_main_play"
+        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView"
+        app:layout_constraintWidth_percent="0.4"
         app:srcCompat="@drawable/uploadscore" />
 
+    <!-- My Score Button -->
     <ImageButton
         android:id="@+id/button_main_myscore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:layout_margin="16dp"
         android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button_main_recorded"
-        app:layout_constraintStart_toEndOf="@+id/constraintLayout"
+        app:layout_constraintEnd_toStartOf="@id/button_main_recorded"
+        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_main_uploadscore"
+        app:layout_constraintWidth_percent="0.4"
         app:srcCompat="@drawable/myscore" />
 
+    <!-- Play Button -->
     <ImageButton
         android:id="@+id/button_main_play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:layout_margin="16dp"
         android:background="@android:color/transparent"
-        app:layout_constraintBottom_toTopOf="@+id/button_main_recorded"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/button_main_uploadscore"
+        app:layout_constraintTop_toBottomOf="@id/textView"
+        app:layout_constraintWidth_percent="0.4"
         app:srcCompat="@drawable/play" />
 
+    <!-- Recorded Button -->
     <ImageButton
         android:id="@+id/button_main_recorded"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:layout_margin="16dp"
         android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/button_main_myscore"
+        app:layout_constraintTop_toBottomOf="@id/button_main_play"
+        app:layout_constraintWidth_percent="0.4"
         app:srcCompat="@drawable/recorded" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
