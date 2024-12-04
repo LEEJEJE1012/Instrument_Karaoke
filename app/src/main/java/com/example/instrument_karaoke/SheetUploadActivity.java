@@ -11,7 +11,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Log;
@@ -48,7 +47,8 @@ public class SheetUploadActivity extends AppCompatActivity {
     private static final int PICK_IMAGES = 1;
     private List<Item> itemList = new ArrayList<>();
     private ArrayAdapter<Item> adapter;
-    private String currentItemName = null;
+    private String currentTitle = null;
+    private String currentArtist = null;
     private String currentInstrument = null;
     private int currentTempo; // 템포 값 저장
     private ImageView imageView;
@@ -144,7 +144,8 @@ public class SheetUploadActivity extends AppCompatActivity {
                     // 템포가 유효하지 않으면 경고 메시지 표시
                     Toast.makeText(this, "템포는 5에서 300 사이의 값이어야 합니다", Toast.LENGTH_SHORT).show();
                 } else {
-                    currentItemName = songTitle + " - " + artistName; // 예: "곡 제목 - 아티스트"
+                    currentTitle = songTitle;
+                    currentArtist = artistName;
                     currentInstrument = selectedInstrument;
                     currentTempo = tempo; // 템포 저장
                     openGallery();
@@ -171,13 +172,13 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         // 곡 제목 입력 필드
         final EditText nameInput = new EditText(this);
-        nameInput.setText(item.getName());
+        nameInput.setText(item.getTitle());
         nameInput.setHint("곡 제목");
         layout.addView(nameInput);
 
         // 아티스트 이름 입력 필드
         final EditText artistInput = new EditText(this);
-        artistInput.setText(item.getInstrument()); // Instrument 필드가 현재 아티스트 이름을 저장한다고 가정
+        artistInput.setText(item.getArtist()); // Instrument 필드가 현재 아티스트 이름을 저장한다고 가정
         artistInput.setHint("아티스트 이름");
         layout.addView(artistInput);
 
@@ -212,7 +213,7 @@ public class SheetUploadActivity extends AppCompatActivity {
                 if (newTempo < 5 || newTempo > 300) {
                     Toast.makeText(this, "템포는 5에서 300 사이의 값이어야 합니다", Toast.LENGTH_SHORT).show();
                 } else {
-                    item.setName(newName);
+                    item.setTitle(newName);
                     item.setInstrument(newInstrument);
                     item.setTempo(newTempo); // 템포 값 설정
                     adapter.notifyDataSetChanged(); // ListView 갱신
@@ -251,14 +252,14 @@ public class SheetUploadActivity extends AppCompatActivity {
                 } else if (data.getData() != null) { // 단일 이미지 선택
                     imageUris.add(data.getData());
                 }
-                addItemToList(currentItemName, currentInstrument, imageUris);
+                addItemToList(currentTitle, currentArtist, currentInstrument, imageUris);
             }
         }
     }
 
     // ListView에 항목 추가
-    private void addItemToList(String name, String instrument, List<Uri> imageUris) {
-        Item newItem = new Item(name, instrument, currentTempo, imageUris);
+    private void addItemToList(String title, String artist, String instrument, List<Uri> imageUris) {
+        Item newItem = new Item(title, artist, instrument, currentTempo, imageUris);
         itemList.add(newItem);
         adapter.notifyDataSetChanged();
     }
@@ -269,8 +270,8 @@ public class SheetUploadActivity extends AppCompatActivity {
         builder.setTitle("곡 정보");
 
         // 곡 정보를 보기 쉽게 메시지로 구성
-        String message = "곡 제목: " + item.getName() + "\n" +
-                "아티스트: " + item.getInstrument() + "\n" +  // 아티스트 정보가 저장된 필드라고 가정
+        String message = "곡 제목: " + item.getTitle() + "\n" +
+                "아티스트: " + item.getArtist() + "\n" +  // 아티스트 정보가 저장된 필드라고 가정
                 "악기: " + item.getInstrument() + "\n" +
                 "템포: " + item.getTempo() + " BPM";
 
@@ -355,7 +356,7 @@ public class SheetUploadActivity extends AppCompatActivity {
                     // 서버에서 반환된 WAV 파일 데이터 읽기
                     byte[] wavBytes = response.body().bytes();
 
-                    String safeFileName = item.getName().replaceAll("[^a-zA-Z0-9._-]", "_") + ".wav";
+                    String safeFileName = item.getTitle().replaceAll("[^a-zA-Z0-9._-]", "_") + ".wav";
 
                     // 앱 전용 디렉터리 내에 저장
                     File appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles"); // "AudioFiles" 폴더 생성
@@ -411,13 +412,15 @@ public class SheetUploadActivity extends AppCompatActivity {
 
     // Item 클래스 정의
     public static class Item {
-        private String name;
+        private String title;
+        private String artist;
         private String instrument;
         private int tempo;
         private final List<Uri> images;
 
-        public Item(String name, String instrument, int tempo, List<Uri> images) {
-            this.name = name;
+        public Item(String title, String artist, String instrument, int tempo, List<Uri> images) {
+            this.title = title;
+            this.artist = artist;
             this.instrument = instrument;
             this.images = images;
             this.tempo = tempo;
@@ -425,11 +428,15 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         @Override
         public String toString() {
-            return name; // ListView에 표시될 항목 이름
+            return title; // ListView에 표시될 항목 이름
         }
 
-        public String getName() {
-            return name;
+        public String getTitle() {
+            return title;
+        }
+
+        public String getArtist() {
+            return artist;
         }
 
         public int getTempo() {
@@ -441,8 +448,12 @@ public class SheetUploadActivity extends AppCompatActivity {
             return instrument;
         }
 
-        public void setName(String name) { // 이름을 설정하는 메서드 추가
-            this.name = name;
+        public void setTitle(String title) { // 이름을 설정하는 메서드 추가
+            this.title = title;
+        }
+
+        public void setArtist(String artist) {
+            this.artist = artist;
         }
 
         public void setTempo(int tempo) {
