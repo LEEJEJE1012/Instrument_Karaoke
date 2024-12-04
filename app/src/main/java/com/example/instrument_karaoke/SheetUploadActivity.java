@@ -356,7 +356,10 @@ public class SheetUploadActivity extends AppCompatActivity {
                     // 서버에서 반환된 WAV 파일 데이터 읽기
                     byte[] wavBytes = response.body().bytes();
 
-                    String safeFileName = item.getTitle().replaceAll("[^a-zA-Z0-9._-]", "_") + ".wav";
+                    String safeFileName = item.getTitle().replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
+                            item.getArtist().replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
+                            mapInstrumentToEng(item.getInstrument()).replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
+                            item.getTempo() + ".wav";
 
                     // 앱 전용 디렉터리 내에 저장
                     File appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles"); // "AudioFiles" 폴더 생성
@@ -407,6 +410,23 @@ public class SheetUploadActivity extends AppCompatActivity {
                 return 5;
             default:
                 return 0; // 기본값, 매핑되지 않은 악기
+        }
+    }
+
+    private String mapInstrumentToEng(String instrument) {
+        switch (instrument) {
+            case "일렉기타":
+                return "ElectricGuitar";
+            case "어쿠스틱 기타":
+                return "AccousticGuitar";
+            case "피아노":
+                return "Piano";
+            case "베이스 기타":
+                return "BassGuitar";
+            case "드럼":
+                return "Drum";
+            default:
+                return "Unknown"; // 기본값, 매핑되지 않은 악기
         }
     }
 
