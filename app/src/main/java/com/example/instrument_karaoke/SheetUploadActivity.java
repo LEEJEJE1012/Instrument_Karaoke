@@ -50,6 +50,7 @@ public class SheetUploadActivity extends AppCompatActivity {
     private static final int PICK_IMAGES = 1;
     private List<Item> itemList = new ArrayList<>();
     private ArrayAdapter<Item> adapter;
+    private AlertDialog progressDialog;
     private String currentTitle = null;
     private String currentArtist = null;
     private String currentInstrument = null;
@@ -398,9 +399,34 @@ public class SheetUploadActivity extends AppCompatActivity {
             runOnUiThread(() -> Toast.makeText(this, "Failed to extract ZIP file", Toast.LENGTH_SHORT).show());
         }
     }
-    
+
+    private void showProgressDialog(String message) {
+        // AlertDialog 빌더 생성
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("진행 중");
+        builder.setMessage(message);
+        builder.setCancelable(false); // 사용자가 수동으로 닫지 못하게 설정
+
+        // Dialog 표시
+        progressDialog = builder.create();
+        progressDialog.show();
+    }
+
+    private void updateProgressDialog(String newMessage) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.setMessage(newMessage);
+        }
+    }
+
+    private void hideProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
     // 이미지를 Flask 서버로 업로드하는 메서드
     private void uploadImagesToServer(List<Uri> imageUriList, Item item) throws IOException {
+        showProgressDialog("업로드를 시작합니다. 잠시만 기다려주세요...");
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS) // 연결 타임아웃
                 .readTimeout(60, TimeUnit.SECONDS)    // 읽기 타임아웃 (서버 응답 대기 시간)
@@ -455,6 +481,7 @@ public class SheetUploadActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
+                    updateProgressDialog("결과를 다운로드 중입니다...");
                     // 서버에서 반환된 WAV 파일 데이터 읽기
 //                    byte[] wavBytes = response.body().bytes();
 //
@@ -506,6 +533,7 @@ public class SheetUploadActivity extends AppCompatActivity {
                     extractAndSaveFiles(zipFile, mxlFileName, wavFileName);
 
                     runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Files downloaded and extracted", Toast.LENGTH_LONG).show());
+                    hideProgressDialog();
                 } else {
                     // 서버에서 응답 실패
                     runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
