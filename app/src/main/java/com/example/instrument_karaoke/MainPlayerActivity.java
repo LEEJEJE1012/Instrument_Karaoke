@@ -40,7 +40,7 @@ public class MainPlayerActivity extends AppCompatActivity {
 
     private Button playButton;
     private Button playandrecordButton;
-    private Button pauseButton;
+
     private MediaRecorder mediaRecorder;
     private boolean isRecording = false;
 
@@ -220,7 +220,7 @@ public class MainPlayerActivity extends AppCompatActivity {
         // Initialize dialog views
         EditText editTextFileName = dialogView.findViewById(R.id.editTextFileName);
         Button buttonStartRecording = dialogView.findViewById(R.id.buttonStartRecording);
-        Button buttonStopRecording = dialogView.findViewById(R.id.buttonStopRecording);
+        Button buttonCancel = dialogView.findViewById(R.id.buttonCancel);
 
         // Create an AlertDialog
         final AlertDialog dialog = new AlertDialog.Builder(this) // `final`로 선언
@@ -241,8 +241,8 @@ public class MainPlayerActivity extends AppCompatActivity {
         });
 
         // Stop Recording Button
-        buttonStopRecording.setOnClickListener(v -> {
-            stopRecording(dialog); // 녹음 종료 시 다이얼로그 닫기
+        buttonCancel.setOnClickListener(v -> {
+            dialog.dismiss(); // 녹음 종료 시 다이얼로그 닫기
         });
 
         dialog.show();
@@ -274,7 +274,7 @@ public class MainPlayerActivity extends AppCompatActivity {
                     // Countdown finished
                     countdownDialog.dismiss(); // Close countdown dialog
                     startPlaybackAndRecording(fileName); // Start playback and recording
-                    showRecordingInProgressDialog(fileName); // Show recording in progress dialog
+                    showRecordingInProgressDialog(); // Show recording in progress dialog
                 }
             }
         };
@@ -284,7 +284,7 @@ public class MainPlayerActivity extends AppCompatActivity {
 
 
 
-    private void showRecordingInProgressDialog(String fileName) {
+    private void showRecordingInProgressDialog() {
         // Create a parent LinearLayout
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);

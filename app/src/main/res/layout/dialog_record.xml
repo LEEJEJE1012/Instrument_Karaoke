@@ -22,10 +22,10 @@
         android:layout_marginTop="16dp" />
 
     <Button
-        android:id="@+id/buttonStopRecording"
+        android:id="@+id/buttonCancel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="녹음 종료"
+        android:text="취소"
         android:backgroundTint="@android:color/black"
         android:textColor="@android:color/white"
         android:layout_marginTop="16dp" />
