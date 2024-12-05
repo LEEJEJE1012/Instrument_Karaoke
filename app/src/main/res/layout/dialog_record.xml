@@ -9,7 +9,7 @@
         android:id="@+id/editTextFileName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="File name (without extension)"
+        android:hint="저장할 파일 이름1"
         android:inputType="text" />
 
     <Button
@@ -17,6 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="녹음 시작"
+        android:backgroundTint="@android:color/black"
+        android:textColor="@android:color/white"
         android:layout_marginTop="16dp" />
 
     <Button
@@ -24,5 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="녹음 종료"
+        android:backgroundTint="@android:color/black"
+        android:textColor="@android:color/white"
         android:layout_marginTop="16dp" />
 </LinearLayout>
