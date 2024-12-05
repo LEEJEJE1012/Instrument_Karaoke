@@ -40,6 +40,7 @@ public class MainPlayerActivity extends AppCompatActivity {
 
     private Button playButton;
     private Button playandrecordButton;
+    private Button pauseButton;
 
     private MediaRecorder mediaRecorder;
     private boolean isRecording = false;
@@ -99,6 +100,11 @@ public class MainPlayerActivity extends AppCompatActivity {
         playButton.setOnClickListener(v -> playSelectedFiles());
         playandrecordButton = findViewById(R.id.button_mainplayer_playandrecord);
         playandrecordButton.setOnClickListener(v -> showRecordingDialog());
+        pauseButton = findViewById(R.id.button_mainplayer_pause);
+        pauseButton.setOnClickListener(v -> {
+            releaseAllMediaPlayers(); // Stop all playback
+            Toast.makeText(this, "All playback stopped.", Toast.LENGTH_SHORT).show();
+        });
 
     }
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
