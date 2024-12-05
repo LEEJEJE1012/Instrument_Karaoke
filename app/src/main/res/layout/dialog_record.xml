@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/editTextFileName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="File name (without extension)"
+        android:inputType="text" />
+
+    <Button
+        android:id="@+id/buttonStartRecording"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="녹음 시작"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/buttonStopRecording"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="녹음 종료"
+        android:layout_marginTop="16dp" />
+</LinearLayout>
