@@ -3,6 +3,7 @@ package com.example.instrument_karaoke;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +34,7 @@ public class SheetManageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sheet_manage);
-        listView = findViewById(R.id.listview_sheetupload_sheetlist);
+        listView = findViewById(R.id.listview_sheetmanage_sheetlist);
 
         // 애플리케이션 전용 외부 저장소 경로
         appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles");
@@ -43,11 +44,11 @@ public class SheetManageActivity extends AppCompatActivity {
         loadAudioFiles();
 
         // 어댑터 설정 및 항목 텍스트 색상 변경
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+        adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1, // 기본 레이아웃 사용
                 audioFiles
-        ){
+        ) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
@@ -197,7 +198,8 @@ public class SheetManageActivity extends AppCompatActivity {
     // 파일 삭제 및 리스트 갱신
     private void deleteFile(String fileName, int position) {
         File fileToDelete = new File(appSpecificDir, fileName);
-        if (fileToDelete.exists() && fileToDelete.delete()) {
+
+        if (fileToDelete.exists() && fileToDelete.delete() && adapter != null) {
             audioFiles.remove(position); // 리스트에서 제거
             adapter.notifyDataSetChanged(); // ListView 갱신
         } else {

@@ -50,11 +50,11 @@ public class RecordingManageActivity extends AppCompatActivity {
         loadAudioFiles();
 
         // 어댑터 설정 및 항목 텍스트 색상 변경
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+        adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1, // 기본 레이아웃 사용
                 recordFiles
-        ){
+        ) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);

@@ -66,7 +66,7 @@ public class SheetUploadActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sheetupload);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.listview_recordingmanage_recordlist), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.listview_sheetupload_sheetlist), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -74,6 +74,8 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         ListView listView = (ListView)findViewById(R.id.listview_sheetupload_sheetlist);
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, itemList);
+
+
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
