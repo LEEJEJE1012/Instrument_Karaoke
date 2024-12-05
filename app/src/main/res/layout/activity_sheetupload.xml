@@ -40,6 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
             android:backgroundTint="@color/black"
+            android:textColor="@color/white"
             android:minWidth="88dip"
             android:text="악보 생성"
             app:layout_constraintBottom_toBottomOf="parent"
