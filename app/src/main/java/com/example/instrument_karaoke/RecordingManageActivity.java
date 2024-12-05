@@ -11,16 +11,22 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class SheetManageActivity extends AppCompatActivity {
+public class RecordingManageActivity extends AppCompatActivity {
     private ListView listView;
-    private ArrayList<String> audioFiles;
+    private ArrayList<String> recordFiles;
     private File appSpecificDir;
     private ArrayAdapter<String> adapter;
     private MediaPlayer mediaPlayer;
@@ -28,21 +34,26 @@ public class SheetManageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sheet_manage);
-        listView = findViewById(R.id.listview_sheetupload_sheetlist);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_recording_manage);
 
-        // 애플리케이션 전용 외부 저장소 경로
-        appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles");
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
-        // 파일 목록 가져오기
-        audioFiles = new ArrayList<>();
+        listView = findViewById(R.id.listview_recordingmanage_recordlist);
+        appSpecificDir = new File(getExternalFilesDir(null), "Recorded");
+
+        recordFiles = new ArrayList<>();
         loadAudioFiles();
 
         // 어댑터 설정 및 항목 텍스트 색상 변경
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1, // 기본 레이아웃 사용
-                audioFiles
+                recordFiles
         ){
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -57,42 +68,33 @@ public class SheetManageActivity extends AppCompatActivity {
         };
         listView.setAdapter(adapter);
 
-        // 항목 클릭 시 파일 재생 액티비티로 이동
-//        listView.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
-//            String selectedFileName = audioFiles.get(position);
-//            Intent intent = new Intent(SheetManageActivity.this, AudioPlayerActivity.class);
-//            intent.putExtra("fileName", selectedFileName);
-//            startActivity(intent);
-//        });
         listView.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
-            String selectedFileName = audioFiles.get(position);
+            String selectedFileName = recordFiles.get(position);
             showAudioPlayerDialog(selectedFileName);
         });
 
-
-
-        // 항목 길게 누르기 시 파일 삭제
         listView.setOnItemLongClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
-            String fileNameToDelete = audioFiles.get(position);
+            String fileNameToDelete = recordFiles.get(position);
             showDeleteConfirmationDialog(fileNameToDelete, position);
             return true;
         });
-    }
 
-    // 팝업으로 재생/정지 기능 제공
+
+    }
     private void showAudioPlayerDialog(String fileName) {
         // 팝업 레이아웃 설정
         LayoutInflater inflater = LayoutInflater.from(this);
-        View dialogView = inflater.inflate(R.layout.dialog_audio_player, null);
+        View dialogView = inflater.inflate(R.layout.dialog_record_player, null);
 
         TextView fileNameTextView = dialogView.findViewById(R.id.dialog_file_name);
         Button playButton = dialogView.findViewById(R.id.dialog_button_play);
         Button stopButton = dialogView.findViewById(R.id.dialog_button_stop);
+        Button feedbackButton = dialogView.findViewById(R.id.dialog_button_feedback);
 
         fileNameTextView.setText(fileName);
 
         // MediaPlayer 설정
-        File appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles");
+        File appSpecificDir = new File(getExternalFilesDir(null), "Recorded");
         String filePath = new File(appSpecificDir, fileName).getAbsolutePath();
         mediaPlayer = new MediaPlayer();
         try {
@@ -128,15 +130,14 @@ public class SheetManageActivity extends AppCompatActivity {
                 })
                 .show();
     }
-
     // 파일 목록 불러오기
     private void loadAudioFiles() {
-        audioFiles.clear();
+        recordFiles.clear();
         if (appSpecificDir.exists()) {
             File[] files = appSpecificDir.listFiles((dir, name) -> name.endsWith(".wav"));
             if (files != null) {
                 for (File file : files) {
-                    audioFiles.add(file.getName());
+                    recordFiles.add(file.getName());
                 }
             }
         }
@@ -156,7 +157,7 @@ public class SheetManageActivity extends AppCompatActivity {
     private void deleteFile(String fileName, int position) {
         File fileToDelete = new File(appSpecificDir, fileName);
         if (fileToDelete.exists() && fileToDelete.delete()) {
-            audioFiles.remove(position); // 리스트에서 제거
+            recordFiles.remove(position); // 리스트에서 제거
             adapter.notifyDataSetChanged(); // ListView 갱신
         } else {
             new AlertDialog.Builder(this)

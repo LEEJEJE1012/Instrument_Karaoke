@@ -43,6 +43,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ImageButton recorded_button = (ImageButton) findViewById(R.id.button_main_recorded);
+        recorded_button.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), RecordingManageActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 }
 

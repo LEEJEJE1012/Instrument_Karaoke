@@ -2,14 +2,14 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/constraintlayout3"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_blurred"
-    tools:context=".SheetUploadActivity">
+    tools:context=".RecordingManageActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout2"
+        android:id="@+id/constraintLayout4"
         android:layout_width="600dp"
         android:layout_height="match_parent"
         android:layout_marginTop="50dp"
@@ -21,7 +21,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ListView
-            android:id="@+id/listview_sheetupload_sheetlist"
+            android:id="@+id/listview_recordingmanage_recordlist"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="16dp"
