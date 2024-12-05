@@ -2,6 +2,7 @@ package com.example.instrument_karaoke;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -24,6 +26,8 @@ public class SheetManageActivity extends AppCompatActivity {
     private File appSpecificDir;
     private ArrayAdapter<String> adapter;
     private MediaPlayer mediaPlayer;
+    private SeekBar seekBar;
+    private Handler handler = new Handler(); // SeekBar 업데이트를 위한 핸들러
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +92,7 @@ public class SheetManageActivity extends AppCompatActivity {
         TextView fileNameTextView = dialogView.findViewById(R.id.dialog_file_name);
         Button playButton = dialogView.findViewById(R.id.dialog_button_play);
         Button stopButton = dialogView.findViewById(R.id.dialog_button_stop);
+        seekBar = dialogView.findViewById(R.id.dialog_audioplayer_seekbar);
 
         fileNameTextView.setText(fileName);
 
@@ -102,10 +107,26 @@ public class SheetManageActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        // SeekBar 설정
+        mediaPlayer.setOnPreparedListener(mp -> {
+            seekBar.setMax(mp.getDuration()); // MediaPlayer 준비 완료 후 SeekBar 최대값 설정
+        });
+        // SeekBar 업데이트 쓰레드 시작
+        Runnable updateSeekBar = new Runnable() {
+            @Override
+            public void run() {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    seekBar.setProgress(mediaPlayer.getCurrentPosition());
+                }
+                handler.postDelayed(this, 100); // 100ms 간격으로 실행
+            }
+        };
+
         // 재생 버튼 리스너
         playButton.setOnClickListener(v -> {
             if (!mediaPlayer.isPlaying()) {
                 mediaPlayer.start();
+                handler.post(updateSeekBar);
             }
         });
 
@@ -113,6 +134,26 @@ public class SheetManageActivity extends AppCompatActivity {
         stopButton.setOnClickListener(v -> {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
+            }
+        });
+
+        // SeekBar 변경 이벤트 리스너
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    mediaPlayer.seekTo(progress); // 사용자가 SeekBar를 움직이면 해당 위치로 이동
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // 사용자가 SeekBar를 터치할 때
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // 사용자가 SeekBar 터치를 끝냈을 때
             }
         });
 
@@ -125,6 +166,7 @@ public class SheetManageActivity extends AppCompatActivity {
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
+                    handler.removeCallbacks(updateSeekBar);
                 })
                 .show();
     }

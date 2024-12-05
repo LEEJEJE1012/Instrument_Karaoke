@@ -469,6 +469,8 @@ public class SheetUploadActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();  // 콘솔에 전체 스택 트레이스 출력
 
+                hideProgressDialog();
+
                 // 긴 메시지는 Logcat에 출력
                 Log.e("UploadError", "Failed to upload images: " + e.getMessage());
 
@@ -537,6 +539,7 @@ public class SheetUploadActivity extends AppCompatActivity {
                 } else {
                     // 서버에서 응답 실패
                     runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
+                    hideProgressDialog();
                 }
             }
         });
