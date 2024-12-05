@@ -89,6 +89,7 @@ public class RecordingManageActivity extends AppCompatActivity {
         TextView fileNameTextView = dialogView.findViewById(R.id.dialog_file_name);
         Button playButton = dialogView.findViewById(R.id.dialog_button_play);
         Button stopButton = dialogView.findViewById(R.id.dialog_button_stop);
+        Button selectmxl = dialogView.findViewById(R.id.dialog_button_selectmxl);
         Button feedbackButton = dialogView.findViewById(R.id.dialog_button_feedback);
 
         fileNameTextView.setText(fileName);
@@ -103,6 +104,26 @@ public class RecordingManageActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // WAV 파일 저장 (선택한 파일 이름)
+        String selectedWavFile = fileName;
+
+        // MXL 파일 선택 버튼
+        final String[] selectedMxlFile = {null}; // 선택한 MXL 파일 이름 저장
+        selectmxl.setOnClickListener(v -> showMxlFilePicker(selectedMxlFile));
+
+        // 피드백 받기 버튼
+        feedbackButton.setOnClickListener(v -> {
+            if (selectedMxlFile[0] == null) {
+                new AlertDialog.Builder(this)
+                        .setTitle("MXL 파일 선택")
+                        .setMessage("MXL 파일을 먼저 선택해 주세요.")
+                        .setPositiveButton("확인", null)
+                        .show();
+            } else {
+                //sendFilesToServer(selectedWavFile, selectedMxlFile[0]);
+            }
+        });
 
         // 재생 버튼 리스너
         playButton.setOnClickListener(v -> {
@@ -166,5 +187,48 @@ public class RecordingManageActivity extends AppCompatActivity {
                     .setPositiveButton("확인", null)
                     .show();
         }
+    }
+
+    private void showMxlFilePicker(String[] selectedMxlFile) {
+        // MXLFiles 디렉터리 확인
+        File mxlDir = new File(getExternalFilesDir(null), "MXLFiles");
+        if (!mxlDir.exists() || !mxlDir.isDirectory()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("MXL 파일 없음")
+                    .setMessage("MXLFiles 디렉터리에 파일이 없습니다.")
+                    .setPositiveButton("확인", null)
+                    .show();
+            return;
+        }
+
+        // MXL 파일 목록 가져오기
+        File[] mxlFiles = mxlDir.listFiles((dir, name) -> name.endsWith(".mxl"));
+        if (mxlFiles == null || mxlFiles.length == 0) {
+            new AlertDialog.Builder(this)
+                    .setTitle("MXL 파일 없음")
+                    .setMessage("MXLFiles 디렉터리에 파일이 없습니다.")
+                    .setPositiveButton("확인", null)
+                    .show();
+            return;
+        }
+
+        // 파일 이름 리스트 생성
+        String[] fileNames = Arrays.stream(mxlFiles)
+                .map(File::getName)
+                .toArray(String[]::new);
+
+        // 다이얼로그로 파일 선택
+        new AlertDialog.Builder(this)
+                .setTitle("MXL 파일 선택")
+                .setItems(fileNames, (dialog, which) -> {
+                    selectedMxlFile[0] = fileNames[which];
+                    new AlertDialog.Builder(this)
+                            .setTitle("파일 선택됨")
+                            .setMessage("선택한 MXL 파일: " + selectedMxlFile[0])
+                            .setPositiveButton("확인", null)
+                            .show();
+                })
+                .setNegativeButton("취소", null)
+                .show();
     }
 }
