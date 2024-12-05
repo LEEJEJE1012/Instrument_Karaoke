@@ -5,8 +5,10 @@ import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
@@ -188,11 +190,12 @@ public class MainPlayerActivity extends AppCompatActivity {
 
 
     private void startPlaybackAndRecording(String fileName) {
-        playSelectedFiles(); // Play selected WAV files
+        // Start playback
+        playSelectedFiles();
 
+        // Prepare for recording
         File outputFile = new File(getExternalFilesDir(null), "Recorded/" + fileName + ".wav");
         try {
-            // Initialize MediaRecorder
             if (mediaRecorder != null) {
                 mediaRecorder.release();
             }
@@ -204,11 +207,9 @@ public class MainPlayerActivity extends AppCompatActivity {
             mediaRecorder.prepare();
             mediaRecorder.start();
             isRecording = true;
-
-            Toast.makeText(this, "Recording started.", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Failed to start recording.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "녹음 시작에 실패했습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -221,8 +222,8 @@ public class MainPlayerActivity extends AppCompatActivity {
         Button buttonStartRecording = dialogView.findViewById(R.id.buttonStartRecording);
         Button buttonStopRecording = dialogView.findViewById(R.id.buttonStopRecording);
 
-        // Build the dialog
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        // Create an AlertDialog
+        final AlertDialog dialog = new AlertDialog.Builder(this) // `final`로 선언
                 .setView(dialogView)
                 .setCancelable(false) // Prevent the dialog from being dismissed
                 .create();
@@ -233,20 +234,124 @@ public class MainPlayerActivity extends AppCompatActivity {
             if (fileName.isEmpty()) {
                 Toast.makeText(this, "Please enter a file name.", Toast.LENGTH_SHORT).show();
             } else {
-                startPlaybackAndRecording(fileName);
+                // Show countdown
+                dialog.dismiss(); // 닫고 카운트다운 시작
+                showCountdownAndRecordingDialog(fileName);
             }
         });
 
         // Stop Recording Button
         buttonStopRecording.setOnClickListener(v -> {
-            stopRecording();
-            dialog.dismiss(); // Dismiss the dialog after stopping the recording
+            stopRecording(dialog); // 녹음 종료 시 다이얼로그 닫기
         });
 
         dialog.show();
     }
 
-    private void stopRecording() {
+    private void showCountdownAndRecordingDialog(String fileName) {
+        // Create a temporary dialog for countdown
+        AlertDialog.Builder countdownBuilder = new AlertDialog.Builder(this);
+        TextView countdownText = new TextView(this);
+        countdownText.setTextSize(32);
+        countdownText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        countdownBuilder.setView(countdownText);
+        AlertDialog countdownDialog = countdownBuilder.create();
+        countdownDialog.setCancelable(false);
+        countdownDialog.show();
+
+        // Countdown handler
+        Handler handler = new Handler();
+        int[] countdown = {3}; // Start countdown at 3 seconds
+
+        Runnable countdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (countdown[0] > 0) {
+                    countdownText.setText(String.valueOf(countdown[0]));
+                    countdown[0]--;
+                    handler.postDelayed(this, 1000); // Repeat every second
+                } else {
+                    // Countdown finished
+                    countdownDialog.dismiss(); // Close countdown dialog
+                    startPlaybackAndRecording(fileName); // Start playback and recording
+                    showRecordingInProgressDialog(fileName); // Show recording in progress dialog
+                }
+            }
+        };
+
+        handler.post(countdownRunnable);
+    }
+
+
+
+    private void showRecordingInProgressDialog(String fileName) {
+        // Create a parent LinearLayout
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 40);
+
+        // Create a TextView for recording status
+        TextView recordingStatus = new TextView(this);
+        recordingStatus.setText("녹음 중...");
+        recordingStatus.setTextSize(20);
+        recordingStatus.setGravity(View.TEXT_ALIGNMENT_CENTER);
+        recordingStatus.setPadding(0, 0, 0, 16);
+        layout.addView(recordingStatus);
+
+        // Create a TextView for timer
+        TextView recordingTimer = new TextView(this);
+        recordingTimer.setText("00:00");
+        recordingTimer.setTextSize(18);
+        recordingTimer.setGravity(View.TEXT_ALIGNMENT_CENTER);
+        recordingTimer.setPadding(0, 0, 0, 16);
+        layout.addView(recordingTimer);
+
+        // Create a Button for stopping recording
+        Button stopRecordingButton = new Button(this);
+        stopRecordingButton.setText("녹음 종료");
+        stopRecordingButton.setBackgroundColor(getResources().getColor(android.R.color.black, null));
+        stopRecordingButton.setTextColor(getResources().getColor(android.R.color.white, null));
+        layout.addView(stopRecordingButton);
+
+        // Create a new AlertDialog
+        AlertDialog recordingDialog = new AlertDialog.Builder(this)
+                .setView(layout)
+                .setCancelable(false) // Prevent dismissal
+                .create();
+
+        // Timer setup
+        Handler timerHandler = new Handler();
+        long startTime = System.currentTimeMillis();
+
+        Runnable timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                int seconds = (int) (elapsedTime / 1000);
+                int minutes = seconds / 60;
+                seconds = seconds % 60;
+
+                recordingTimer.setText(String.format("%02d:%02d", minutes, seconds));
+                timerHandler.postDelayed(this, 1000); // Update every second
+            }
+        };
+
+        timerHandler.post(timerRunnable);
+
+        // Stop recording button functionality
+        stopRecordingButton.setOnClickListener(v -> {
+            stopRecording(recordingDialog); // Stop recording
+            releaseAllMediaPlayers(); // Stop all media players
+            timerHandler.removeCallbacks(timerRunnable); // Stop timer
+            recordingDialog.dismiss(); // Close the dialog
+            Toast.makeText(this, "녹음 종료 및 저장 완료.", Toast.LENGTH_SHORT).show();
+        });
+
+        recordingDialog.show();
+    }
+
+
+    private void stopRecording(AlertDialog dialog) {
         if (isRecording) {
             try {
                 mediaRecorder.stop();
@@ -254,10 +359,14 @@ public class MainPlayerActivity extends AppCompatActivity {
                 mediaRecorder = null;
                 isRecording = false;
 
-                Toast.makeText(this, "Recording stopped and saved.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "녹음이 중지되었습니다.", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(this, "Failed to stop recording.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "녹음 종료 실패.", Toast.LENGTH_SHORT).show();
+            } finally {
+                if (dialog != null && dialog.isShowing()) {
+                    dialog.dismiss(); // 다이얼로그 닫기
+                }
             }
         }
     }
