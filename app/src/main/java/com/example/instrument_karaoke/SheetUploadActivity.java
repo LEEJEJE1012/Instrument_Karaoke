@@ -298,7 +298,7 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         builder.show();
     }
-
+    
     // 이미지를 Flask 서버로 업로드하는 메서드
     private void uploadImagesToServer(List<Uri> imageUriList, Item item) throws IOException {
         OkHttpClient client = new OkHttpClient.Builder()
