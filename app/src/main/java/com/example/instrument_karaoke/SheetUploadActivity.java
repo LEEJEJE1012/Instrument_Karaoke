@@ -26,11 +26,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 
 import okhttp3.Call;
@@ -264,6 +267,15 @@ public class SheetUploadActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
+    private String generateFileName(String title, String artist, String instrument, int tempo, String extension) {
+        // 특수 문자를 "_"로 치환하여 안전한 파일 이름 생성
+        String safeTitle = title.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String safeArtist = artist.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String safeInstrument = instrument.replaceAll("[^a-zA-Z0-9._-]", "_");
+
+        return safeTitle + "_" + safeArtist + "_" + safeInstrument + "_" + tempo + extension;
+    }
+
     // 선택된 항목을 팝업으로 표시하는 메서드
     private void showItemDialog(Item item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -297,6 +309,94 @@ public class SheetUploadActivity extends AppCompatActivity {
         });
 
         builder.show();
+    }
+
+    private void extractAndSaveFiles(File zipFile, String mxlFileName, String wavFileName) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry zipEntry;
+            while ((zipEntry = zis.getNextEntry()) != null) {
+                String fileName = zipEntry.getName();
+
+                File saveDir;
+                String newFileName;
+                if (fileName.endsWith(".wav")) {
+                    saveDir = new File(getExternalFilesDir(null), "AudioFiles");
+                    newFileName = wavFileName; // 새 이름
+                } else if (fileName.endsWith(".mxl")) {
+                    saveDir = new File(getExternalFilesDir(null), "MXLFiles");
+                    newFileName = mxlFileName; // 새 이름
+                } else {
+                    continue;
+                }
+
+                if (!saveDir.exists()) {
+                    saveDir.mkdirs();
+                }
+
+                // 새 이름으로 파일 저장
+                File extractedFile = new File(saveDir, newFileName);
+                try (FileOutputStream fos = new FileOutputStream(extractedFile)) {
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                }
+                Log.d("FileExtract", "Saved file: " + extractedFile.getAbsolutePath());
+            }
+            zis.closeEntry();
+            zipFile.delete(); // ZIP 파일 삭제 (선택 사항)
+        } catch (IOException e) {
+            e.printStackTrace();
+            runOnUiThread(() -> Toast.makeText(this, "Failed to extract ZIP file", Toast.LENGTH_SHORT).show());
+        }
+    }
+
+
+    private void extractZipFile(File zipFile) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry zipEntry;
+            while ((zipEntry = zis.getNextEntry()) != null) {
+                String fileName = zipEntry.getName();
+
+                // 저장 디렉터리 설정
+                File saveDir;
+                if (fileName.endsWith(".wav")) {
+                    saveDir = new File(getExternalFilesDir(null), "AudioFiles");
+                    if (!saveDir.exists()) {
+                        saveDir.mkdirs(); // 폴더가 없으면 생성
+                    }
+                } else if (fileName.endsWith(".mxl")) {
+                    saveDir = new File(getExternalFilesDir(null), "MXLFiles");
+                    if (!saveDir.exists()) {
+                        saveDir.mkdirs(); // 폴더가 없으면 생성
+                    }
+                } else {
+                    continue; // WAV나 MXL 파일이 아니면 스킵
+                }
+
+                if (!saveDir.exists()) {
+                    saveDir.mkdirs();
+                }
+
+                // 파일 저장
+                File extractedFile = new File(saveDir, fileName);
+                try (FileOutputStream fos = new FileOutputStream(extractedFile)) {
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                }
+
+                Log.d("FileExtract", "Saved file: " + extractedFile.getAbsolutePath());
+            }
+            zis.closeEntry();
+            zipFile.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+            runOnUiThread(() -> Toast.makeText(this, "Failed to extract ZIP file", Toast.LENGTH_SHORT).show());
+        }
     }
     
     // 이미지를 Flask 서버로 업로드하는 메서드
@@ -350,32 +450,62 @@ public class SheetUploadActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to upload images. Check Logcat for details.", Toast.LENGTH_SHORT).show());
             }
 
+
+
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     // 서버에서 반환된 WAV 파일 데이터 읽기
-                    byte[] wavBytes = response.body().bytes();
+//                    byte[] wavBytes = response.body().bytes();
+//
+//                    String safeFileName = item.getTitle().replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
+//                            item.getArtist().replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
+//                            mapInstrumentToEng(item.getInstrument()).replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
+//                            item.getTempo() + ".wav";
+//
+//                    // 앱 전용 디렉터리 내에 저장
+//                    File appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles"); // "AudioFiles" 폴더 생성
+//                    if (!appSpecificDir.exists()) {
+//                        appSpecificDir.mkdirs(); // 폴더가 없으면 생성
+//                    }
+//
+//                    // WAV 파일 저장 위치 설정
+//                    File wavFile = new File(appSpecificDir, safeFileName);
+//                    // 파일 저장
+//                    try (FileOutputStream fos = new FileOutputStream(wavFile)) {
+//                        fos.write(wavBytes);
+//                    }
+//
+//                    // UI 업데이트: 사용자에게 저장 경로 알림
+//                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "WAV saved: " + wavFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
 
-                    String safeFileName = item.getTitle().replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
-                            item.getArtist().replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
-                            mapInstrumentToEng(item.getInstrument()).replaceAll("[^a-zA-Z0-9._-]", "_") + "_" +
-                            item.getTempo() + ".wav";
+                    byte[] zipBytes = response.body().bytes();
 
-                    // 앱 전용 디렉터리 내에 저장
-                    File appSpecificDir = new File(getExternalFilesDir(null), "AudioFiles"); // "AudioFiles" 폴더 생성
-                    if (!appSpecificDir.exists()) {
-                        appSpecificDir.mkdirs(); // 폴더가 없으면 생성
+                    File zipFile = new File(getExternalFilesDir(null), "output_files.zip");
+                    try (FileOutputStream fos = new FileOutputStream(zipFile)) {
+                        fos.write(zipBytes);
                     }
 
-                    // WAV 파일 저장 위치 설정
-                    File wavFile = new File(appSpecificDir, safeFileName);
-                    // 파일 저장
-                    try (FileOutputStream fos = new FileOutputStream(wavFile)) {
-                        fos.write(wavBytes);
-                    }
+                    // MXL 및 WAV 파일 이름 생성
+                    String mxlFileName = generateFileName(
+                            item.getTitle(),
+                            item.getArtist(),
+                            mapInstrumentToEng(item.getInstrument()),
+                            item.getTempo(),
+                            ".mxl"
+                    );
 
-                    // UI 업데이트: 사용자에게 저장 경로 알림
-                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "WAV saved: " + wavFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
+                    String wavFileName = generateFileName(
+                            item.getTitle(),
+                            item.getArtist(),
+                            mapInstrumentToEng(item.getInstrument()),
+                            item.getTempo(),
+                            ".wav"
+                    );
+
+                    extractAndSaveFiles(zipFile, mxlFileName, wavFileName);
+
+                    runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Files downloaded and extracted", Toast.LENGTH_LONG).show());
                 } else {
                     // 서버에서 응답 실패
                     runOnUiThread(() -> Toast.makeText(SheetUploadActivity.this, "Failed to process images", Toast.LENGTH_SHORT).show());
