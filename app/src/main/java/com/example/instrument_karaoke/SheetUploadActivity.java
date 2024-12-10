@@ -430,8 +430,8 @@ public class SheetUploadActivity extends AppCompatActivity {
     private void uploadImagesToServer(List<Uri> imageUriList, Item item) throws IOException {
         showProgressDialog("업로드를 시작합니다. 잠시만 기다려주세요...");
         OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS) // 연결 타임아웃
-                .readTimeout(60, TimeUnit.SECONDS)    // 읽기 타임아웃 (서버 응답 대기 시간)
+                .connectTimeout(60, TimeUnit.SECONDS) // 연결 타임아웃
+                .readTimeout(120, TimeUnit.SECONDS)    // 읽기 타임아웃 (서버 응답 대기 시간)
                 .writeTimeout(60, TimeUnit.SECONDS)   // 쓰기 타임아웃 (데이터 업로드 시간)
                 .build();
 
