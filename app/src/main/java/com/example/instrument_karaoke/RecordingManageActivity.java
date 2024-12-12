@@ -375,14 +375,20 @@ public class RecordingManageActivity extends AppCompatActivity {
                         resultReturn[1] = resultArray.getDouble(1);
 
                         // CSV 파일 저장
-                        saveCsvFile(csvData, "result_final.csv");
+                        saveCsvFile(csvData);
 
                         // UI 업데이트
                         runOnUiThread(() -> {
                             Toast.makeText(getApplicationContext(),
                                     "비트 점수: " + resultReturn[0] + "\n음정 점수: " + resultReturn[1],
                                     Toast.LENGTH_LONG).show();
+                            // FeedbackActivity로 이동 및 resultReturn 값 전달
+                            Intent intent = new Intent(getApplicationContext(), FeedbackActivity.class);
+                            intent.putExtra("beatScore", resultReturn[0]);
+                            intent.putExtra("pitchScore", resultReturn[1]);
+                            startActivity(intent);
                         });
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                         showErrorAndDismiss_string("응답 파싱 중 오류가 발생했습니다.");
@@ -416,11 +422,21 @@ public class RecordingManageActivity extends AppCompatActivity {
     }
 
     // CSV 파일을 내부 디렉토리에 저장하는 메서드
-    private void saveCsvFile(String csvData, String fileName) {
-        try {
-            File internalDir = getFilesDir();
-            File file = new File(internalDir, fileName);
+    // CSV 파일을 내부 디렉토리의 Feedback 폴더에 저장하는 메서드
+    private void saveCsvFile(String csvData) {
+        String fileName = "result.csv";
 
+        try {
+            // 내부 디렉토리에 Feedback 폴더 생성 (없으면 생성)
+            File feedbackDir = new File(getExternalFilesDir(null), "Feedback");
+            if (!feedbackDir.exists()) {
+                feedbackDir.mkdirs(); // 폴더 생성
+            }
+
+            // Feedback 폴더 안에 result.csv 파일 경로 설정
+            File file = new File(feedbackDir, fileName);
+
+            // FileOutputStream을 사용하여 파일 저장 (덮어쓰기 모드)
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 fos.write(csvData.getBytes());
                 fos.flush();
