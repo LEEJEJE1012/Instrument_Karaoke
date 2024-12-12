@@ -20,7 +20,7 @@ import java.util.List;
 public class FeedbackActivity extends AppCompatActivity {
 
     private static final float X_SCALE = 200; // X축 스케일 조정
-    private static final float Y_SCALE = 15; // Y축 스케일 조정
+    private static final float Y_SCALE = 30; // Y축 스케일 조정
     private static final float OFFSET_Y = 700; // Y축 시작점
 
     @Override
