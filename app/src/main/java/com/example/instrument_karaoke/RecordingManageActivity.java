@@ -130,7 +130,6 @@ public class RecordingManageActivity extends AppCompatActivity {
         }
 
         Uri selectedWavFileUri = Uri.fromFile(new File(filePath));
-        Toast.makeText(this, "WAV 파일 선택 완료!", Toast.LENGTH_SHORT).show();
         Log.d("WavFileUri", "Selected WAV file URI: " + selectedWavFileUri.toString());
 
         // MXL 파일 선택 버튼
@@ -379,9 +378,6 @@ public class RecordingManageActivity extends AppCompatActivity {
 
                         // UI 업데이트
                         runOnUiThread(() -> {
-                            Toast.makeText(getApplicationContext(),
-                                    "비트 점수: " + resultReturn[0] + "\n음정 점수: " + resultReturn[1],
-                                    Toast.LENGTH_LONG).show();
                             // FeedbackActivity로 이동 및 resultReturn 값 전달
                             Intent intent = new Intent(getApplicationContext(), FeedbackActivity.class);
                             intent.putExtra("beatScore", resultReturn[0]);
@@ -421,7 +417,6 @@ public class RecordingManageActivity extends AppCompatActivity {
 
     }
 
-    // CSV 파일을 내부 디렉토리에 저장하는 메서드
     // CSV 파일을 내부 디렉토리의 Feedback 폴더에 저장하는 메서드
     private void saveCsvFile(String csvData) {
         String fileName = "result.csv";

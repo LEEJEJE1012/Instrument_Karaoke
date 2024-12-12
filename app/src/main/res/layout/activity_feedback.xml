@@ -29,10 +29,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TextView 1"
-            app:layout_constraintTop_toBottomOf="@id/Scrollview"
-            app:layout_constraintStart_toStartOf="parent"
+            android:textColor="@color/black"
+            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.3" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/Scrollview" />
 
         <!-- 두 번째 TextView -->
         <TextView
@@ -40,6 +41,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TextView 2"
+            android:textColor="@color/black"
+            android:textSize="20sp"
             app:layout_constraintTop_toBottomOf="@id/Scrollview"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -51,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:layout_marginEnd="2dp"
-            android:layout_marginBottom="40dp"
+            android:layout_marginBottom="45dp"
             android:fillViewport="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
