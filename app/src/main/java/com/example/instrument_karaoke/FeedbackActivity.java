@@ -20,7 +20,7 @@ import java.util.List;
 public class FeedbackActivity extends AppCompatActivity {
 
     private static final float X_SCALE = 200; // X축 스케일 조정
-    private static final float Y_SCALE = 30; // Y축 스케일 조정
+    private static final float Y_SCALE = 15; // Y축 스케일 조정
     private static final float OFFSET_Y = 700; // Y축 시작점
 
     @Override
@@ -99,13 +99,18 @@ public class FeedbackActivity extends AppCompatActivity {
     private int pitchToY(String pitch) {
         switch (pitch) {
             case "C4": return 0;
-            case "D4": return 1;
-            case "E4": return 2;
-            case "F4": return 3;
-            case "G4": return 4;
-            case "A4": return 5;
-            case "B4": return 6;
-            case "C5": return 7;
+            case "C♯4": return 1;
+            case "D4": return 2;
+            case "D♯4": return 3;
+            case "E4": return 4;
+            case "F4": return 5;
+            case "F♯4": return 6;
+            case "G4": return 7;
+            case "G♯4": return 8;
+            case "A4": return 9;
+            case "A♯4": return 10;
+            case "B4": return 11;
+            case "C5": return 12;
             default: return 0;
         }
     }
