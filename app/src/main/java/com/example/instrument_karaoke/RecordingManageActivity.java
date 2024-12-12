@@ -1,7 +1,14 @@
 package com.example.instrument_karaoke;
 
+import android.content.Intent;
+import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.telecom.Call;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,19 +17,36 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.app.ProgressDialog;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class RecordingManageActivity extends AppCompatActivity {
     private ListView listView;
@@ -105,23 +129,58 @@ public class RecordingManageActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // WAV 파일 저장 (선택한 파일 이름)
-        String selectedWavFile = fileName;
+        Uri selectedWavFileUri = Uri.fromFile(new File(filePath));
+        Toast.makeText(this, "WAV 파일 선택 완료!", Toast.LENGTH_SHORT).show();
+        Log.d("WavFileUri", "Selected WAV file URI: " + selectedWavFileUri.toString());
 
         // MXL 파일 선택 버튼
         final String[] selectedMxlFile = {null}; // 선택한 MXL 파일 이름 저장
-        selectmxl.setOnClickListener(v -> showMxlFilePicker(selectedMxlFile));
+        Uri[] selectedMxlFileUri = {null};
+
+        selectmxl.setOnClickListener(v -> {
+            File mxlDir = new File(getExternalFilesDir(null), "MXLFiles");
+
+            if (!mxlDir.exists() || !mxlDir.isDirectory()) {
+                Toast.makeText(this, "MXLFiles 디렉토리가 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 디렉토리 내 MXL 파일 목록 가져오기
+            File[] mxlFiles = mxlDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".mxl"));
+
+            if (mxlFiles == null || mxlFiles.length == 0) {
+                Toast.makeText(this, "MXLFiles 디렉토리에 MXL 파일이 없습니다.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 파일 이름 목록 생성
+            String[] fileNames = new String[mxlFiles.length];
+            for (int i = 0; i < mxlFiles.length; i++) {
+                fileNames[i] = mxlFiles[i].getName();
+            }
+
+            // 파일 선택 다이얼로그 표시
+            new AlertDialog.Builder(this)
+                    .setTitle("MXL 파일 선택")
+                    .setItems(fileNames, (dialog, which) -> {
+                        File selectedFile = mxlFiles[which];
+                        selectedMxlFileUri[0] = Uri.fromFile(selectedFile);
+                        Toast.makeText(this, "선택된 파일: " + selectedFile.getName(), Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("취소", null)
+                    .show();
+        });
 
         // 피드백 받기 버튼
         feedbackButton.setOnClickListener(v -> {
-            if (selectedMxlFile[0] == null) {
+            if (selectedMxlFileUri[0] == null) {
                 new AlertDialog.Builder(this)
                         .setTitle("MXL 파일 선택")
                         .setMessage("MXL 파일을 먼저 선택해 주세요.")
                         .setPositiveButton("확인", null)
                         .show();
             } else {
-                //sendFilesToServer(selectedWavFile, selectedMxlFile[0]);
+                sendFilesToServer(selectedWavFileUri, selectedMxlFileUri[0]);
             }
         });
 
@@ -231,4 +290,158 @@ public class RecordingManageActivity extends AppCompatActivity {
                 .setNegativeButton("취소", null)
                 .show();
     }
+
+    private String getRealPathFromURI(Uri uri) {
+        if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        String[] projection = {MediaStore.Images.Media.DATA};
+        try (Cursor cursor = getContentResolver().query(uri, projection, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                return cursor.getString(columnIndex);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void sendFilesToServer(Uri wavFileUri, Uri mxlFileUri) {
+        // ProgressDialog 표시
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("업로드를 시작합니다. 잠시만 기다려주세요...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        // OkHttpClient 설정
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)  // 연결 타임아웃
+                .readTimeout(120, TimeUnit.SECONDS)    // 읽기 타임아웃
+                .writeTimeout(60, TimeUnit.SECONDS)    // 쓰기 타임아웃
+                .build();
+
+        // WAV
+        String wavFilePath = getRealPathFromURI(wavFileUri);
+        Log.d("wavfileURI", "wavFileURI: " + wavFileUri);
+        Log.d("wavfilepath", "wavFilePath: " + wavFilePath);
+        if (wavFilePath == null) {
+            showErrorAndDismiss(progressDialog, "WAV 파일 경로가 유효하지 않습니다.");
+            return;
+        }
+        File wavFile = new File(wavFilePath);
+        RequestBody wavRequestBody = RequestBody.create(MediaType.parse("audio/wav"), wavFile);
+
+        // MXL 파일 준비
+        String mxlFilePath = getRealPathFromURI(mxlFileUri);
+        if (mxlFilePath == null) {
+            showErrorAndDismiss(progressDialog, "MXL 파일 경로가 유효하지 않습니다.");
+            return;
+        }
+        File mxlFile = new File(mxlFilePath);
+        RequestBody mxlRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), mxlFile);
+
+        // MultipartBody 생성
+        MultipartBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("wav_file", wavFile.getName(), wavRequestBody)
+                .addFormDataPart("mxl_file", mxlFile.getName(), mxlRequestBody)
+                .build();
+
+        // 서버 요청 설정
+        Request request = new Request.Builder()
+                .url("http://172.20.10.3:5001/upload") // Flask 서버 URL
+                .post(requestBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onResponse(@NonNull okhttp3.Call call, @NonNull Response response) throws IOException {
+                // ProgressDialog 숨기기 (UI 작업은 runOnUiThread에서 실행)
+                runOnUiThread(() -> progressDialog.dismiss());
+
+                if (response.isSuccessful()) {
+                    // 서버로부터 응답이 성공적으로 돌아온 경우
+                    String responseBody = response.body().string();
+                    try {
+                        JSONObject jsonResponse = new JSONObject(responseBody);
+                        JSONArray resultArray = jsonResponse.getJSONArray("result");
+                        String csvData = jsonResponse.getString("csv_file");
+
+                        // result_return 배열에 점수 저장
+                        double[] resultReturn = new double[2];
+                        resultReturn[0] = resultArray.getDouble(0);
+                        resultReturn[1] = resultArray.getDouble(1);
+
+                        // CSV 파일 저장
+                        saveCsvFile(csvData, "result_final.csv");
+
+                        // UI 업데이트
+                        runOnUiThread(() -> {
+                            Toast.makeText(getApplicationContext(),
+                                    "비트 점수: " + resultReturn[0] + "\n음정 점수: " + resultReturn[1],
+                                    Toast.LENGTH_LONG).show();
+                        });
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        showErrorAndDismiss_string("응답 파싱 중 오류가 발생했습니다.");
+                    }
+
+                } else {
+                    // 서버가 오류 응답을 보낸 경우
+                    final String errorMessage = response.message();
+                    runOnUiThread(() -> {
+                        Toast.makeText(RecordingManageActivity.this, "서버 오류: " + errorMessage, Toast.LENGTH_SHORT).show();
+                        Log.e("UploadError", "Error response: " + errorMessage);
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull okhttp3.Call call, @NonNull IOException e) {
+                // ProgressDialog 숨기기 (UI 작업은 runOnUiThread에서 실행)
+                runOnUiThread(() -> progressDialog.dismiss());
+
+                // 요청이 실패한 경우 (네트워크 오류 등)
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(RecordingManageActivity.this, "파일 업로드 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("UploadError", "Network failure: " + e.getMessage());
+                });
+            }
+        });
+
+
+    }
+
+    // CSV 파일을 내부 디렉토리에 저장하는 메서드
+    private void saveCsvFile(String csvData, String fileName) {
+        try {
+            File internalDir = getFilesDir();
+            File file = new File(internalDir, fileName);
+
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                fos.write(csvData.getBytes());
+                fos.flush();
+            }
+
+            Log.d("SaveCSV", "CSV 파일이 저장되었습니다: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("SaveCSV", "CSV 파일 저장 실패: " + e.getMessage());
+        }
+    }
+
+    private void showErrorAndDismiss(ProgressDialog progressDialog, String message) {
+        progressDialog.dismiss();
+        runOnUiThread(() -> Toast.makeText(RecordingManageActivity.this, message, Toast.LENGTH_SHORT).show());
+    }
+
+    private void showErrorAndDismiss_string(String message) {
+        runOnUiThread(() -> {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        });
+    }
+
 }
