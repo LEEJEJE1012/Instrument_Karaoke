@@ -462,7 +462,7 @@ public class SheetUploadActivity extends AppCompatActivity {
 
         // 서버의 URL 설정 (Flask 서버)
         Request request = new Request.Builder()
-                .url("http://172.20.10.3:5001/upload") // Flask 서버 URL
+                .url("http://172.20.10.3:5002/upload") // Flask 서버 URL
                 .post(requestBody)
                 .build();
 
